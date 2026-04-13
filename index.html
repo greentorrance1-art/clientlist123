@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green Lion CRM</title>
+<style>
+:root{
+  --bg:#0b0f17;
+  --card:rgba(255,255,255,0.06);
+  --card2:rgba(255,255,255,0.1);
+  --text:#e6e6e6;
+  --muted:#9aa4b2;
+  --accent:#4ade80;
+  --danger:#ef4444;
+  --warn:#f59e0b;
+}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+body{margin:0;background:var(--bg);color:var(--text)}
+header{padding:16px;border-bottom:1px solid rgba(255,255,255,0.08);position:sticky;top:0;background:rgba(11,15,23,0.9);backdrop-filter:blur(10px)}
+h1{font-size:16px;margin:0}
+.container{padding:12px;display:grid;gap:12px}
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:900px){.grid{grid-template-columns:1.2fr 1fr}}
+
+.card{background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,select,button,textarea{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  color:var(--text);
+  padding:8px;
+  border-radius:10px;
+  outline:none;
+}
+button{cursor:pointer}
+button.primary{background:var(--accent);color:#000;font-weight:600}
+small{color:var(--muted)}
+.metric{font-size:18px;font-weight:700}
+.badge{padding:4px 8px;border-radius:999px;font-size:11px}
+.hot{background:rgba(74,222,128,0.2);color:var(--accent)}
+.warn{background:rgba(245,158,11,0.2);color:var(--warn)}
+.danger{background:rgba(239,68,68,0.2);color:var(--danger)}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{padding:10px;border-radius:12px;background:var(--card2);display:flex;justify-content:space-between;gap:10px}
+.item input,.item select{font-size:12px;padding:4px}
+.flex{display:flex;gap:6px;align-items:center}
+.progress{height:8px;background:rgba(255,255,255,0.1);border-radius:999px;overflow:hidden}
+.bar{height:100%;background:var(--accent)}
+</style>
+</head>
+<body>
+
+<header>
+<h1>Green Lion CRM — Revenue Intelligence Engine</h1>
+</header>
+
+<div class="container">
+
+<!-- INPUT -->
+<div class="card">
+<div class="row">
+<input id="name" placeholder="Company">
+<input id="value" placeholder="Deal Value" type="number">
+<select id="status">
+<option>Lead</option>
+<option>Contacted</option>
+<option>Pitch Sent</option>
+<option>Negotiation</option>
+<option>Waiting Response</option>
+<option>Closed Won</option>
+<option>Closed Lost</option>
+</select>
+<button class="primary" onclick="addDeal()">Add</button>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="grid">
+
+<div class="card">
+<h3>Dashboard</h3>
+<div id="metrics"></div>
+<br>
+<div class="progress"><div id="goalBar" class="bar"></div></div>
+<small id="goalText"></small>
+</div>
+
+<div class="card">
+<h3>Decision Engine</h3>
+<div id="insights"></div>
+</div>
+
+</div>
+
+<!-- PIPELINE -->
+<div class="card">
+<h3>Pipeline</h3>
+<div id="list" class="list"></div>
+</div>
+
+</div>
+
+<script>
+let goal = 5000;
+
+let data = JSON.parse(localStorage.getItem("crm")) || [];
+
+const probs = {
+"Lead":0.1,
+"Contacted":0.25,
+"Pitch Sent":0.5,
+"Negotiation":0.7,
+"Waiting Response":0.8,
+"Closed Won":1,
+"Closed Lost":0
+};
+
+function save(){
+localStorage.setItem("crm",JSON.stringify(data));
+render();
+}
+
+function addDeal(){
+let n=document.getElementById("name").value;
+let v=parseFloat(document.getElementById("value").value||0);
+let s=document.getElementById("status").value;
+
+if(!n||!v)return;
+
+data.push({
+id:Date.now(),
+name:n,
+value:v,
+status:s,
+prob:probs[s],
+notes:"",
+date:new Date().toLocaleDateString()
+});
+
+document.getElementById("name").value="";
+document.getElementById("value").value="";
+save();
+}
+
+function update(id,key,val){
+let d=data.find(x=>x.id===id);
+d[key]=val;
+if(key==="status") d.prob=probs[val];
+save();
+}
+
+function metrics(){
+let total=data.length;
+let active=data.filter(d=>d.status!=="Closed Won"&&d.status!=="Closed Lost").length;
+let closed=data.filter(d=>d.status==="Closed Won").length;
+
+let conv= total? (closed/total*100).toFixed(1):0;
+
+let pipeline=data.reduce((a,b)=>a+b.value,0);
+let weighted=data.reduce((a,b)=>a+b.value*b.prob,0);
+
+let avg=total? pipeline/total:0;
+let needed=Math.ceil(goal/(avg||1));
+
+let forecast=weighted;
+let gap=goal-forecast;
+
+return {total,active,closed,conv,pipeline,weighted,forecast,gap,needed};
+}
+
+function render(){
+let m=metrics();
+
+document.getElementById("metrics").innerHTML=`
+<div class="row">
+<div><div class="metric">${m.total}</div><small>Leads</small></div>
+<div><div class="metric">${m.active}</div><small>Active</small></div>
+<div><div class="metric">${m.closed}</div><small>Closed</small></div>
+<div><div class="metric">${m.conv}%</div><small>Conv</small></div>
+</div>
+<br>
+<div class="row">
+<div><small>Pipeline</small><div>$${m.pipeline.toFixed(0)}</div></div>
+<div><small>Weighted</small><div>$${m.weighted.toFixed(0)}</div></div>
+</div>
+<br>
+<div class="row">
+<div><small>Goal</small><div>$${goal}</div></div>
+<div><small>Needed Avg Deals</small><div>${m.needed}</div></div>
+</div>
+`;
+
+document.getElementById("goalBar").style.width=Math.min(100,(m.forecast/goal*100))+"%";
+
+document.getElementById("goalText").innerText=
+`Forecast: $${m.forecast.toFixed(0)} | Gap: $${m.gap.toFixed(0)}`;
+
+let insights="";
+
+let hot=data.filter(d=>d.prob>=0.7&&d.value>1000);
+let stale=data.filter(d=>{
+let diff=(Date.now()-new Date(d.date).getTime())/86400000;
+return diff>7&&d.status!=="Closed Won"&&d.status!=="Closed Lost";
+});
+
+insights+=hot.length?`🔥 ${hot.length} Hot Leads<br>`:"";
+insights+=stale.length?`⚠️ ${stale.length} Stale Leads<br>`:"";
+insights+=m.weighted>goal?`💰 On Track<br>`:`❌ Behind Goal<br>`;
+
+document.getElementById("insights").innerHTML=insights;
+
+document.getElementById("list").innerHTML=data.map(d=>`
+<div class="item">
+<div>
+<input value="${d.name}" onchange="update(${d.id},'name',this.value)">
+<br>
+<small>$<input type="number" value="${d.value}" onchange="update(${d.id},'value',parseFloat(this.value))"></small>
+</div>
+
+<div class="flex">
+<select onchange="update(${d.id},'status',this.value)">
+${Object.keys(probs).map(p=>`
+<option ${p===d.status?'selected':''}>${p}</option>
+`).join("")}
+</select>
+<span class="badge ${d.prob>0.7?'hot':d.prob>0.3?'warn':'danger'}">
+${(d.prob*100).toFixed(0)}%
+</span>
+</div>
+</div>
+`).join("");
+}
+
+render();
+</script>
+
+</body>
+</html>
