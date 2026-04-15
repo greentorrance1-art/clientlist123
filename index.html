@@ -216,70 +216,132 @@ select.modal-inp option{background:#1a1e21;}
 .toast{position:fixed;bottom:calc(95px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);z-index:300;background:var(--surf-4);color:var(--text-1);padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;opacity:0;transition:opacity .2s ease,transform .2s ease;pointer-events:none;border:1px solid rgba(255,255,255,.07);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+/* SYNC STATUS INDICATOR */
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .4s ease;}
+.sync-dot.synced{background:var(--green);}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite;}
+.sync-dot.offline{background:var(--red-glow);border:1.5px solid var(--red);}
+.sync-dot.error{background:var(--red);}
+.sync-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-2);}
 
-/* ACTIVITY TRACKER */
-.activity-card{background:var(--surf-2);border-radius:var(--r-xl);padding:20px;}
-.ac-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.ac-title-row{display:flex;align-items:center;gap:8px;}
-.ac-icon{width:30px;height:30px;border-radius:9px;background:var(--green-glow);border:1px solid rgba(0,232,135,.15);display:flex;align-items:center;justify-content:center;font-size:14px;}
-.ac-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-1);}
-.ac-date-lbl{font-size:9px;color:var(--text-3);}
-.ac-reset{background:none;border:none;color:var(--text-3);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;padding:4px 8px;border-radius:6px;transition:var(--ease);font-family:'Bricolage Grotesque',sans-serif;}
-.ac-reset:hover{color:var(--red);background:var(--red-glow);}
-.activity-rows{display:flex;flex-direction:column;gap:8px;}
-.act-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:rgba(255,255,255,.02);border-radius:var(--r-md);border:1px solid rgba(255,255,255,.04);}
-.act-emoji{font-size:16px;flex-shrink:0;width:24px;text-align:center;}
-.act-info{flex:1;min-width:0;}
-.act-label{font-size:12px;font-weight:600;color:var(--text-1);}
-.act-target{font-size:10px;color:var(--text-3);margin-top:1px;}
-.act-prog-wrap{margin-top:5px;}
-.act-prog-track{height:2px;background:var(--surf-4);border-radius:2px;overflow:hidden;}
-.act-prog-fill{height:100%;border-radius:2px;transition:width .4s ease;}
-.act-controls{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-.act-count{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text-1);min-width:28px;text-align:center;}
-.act-btn{width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:var(--ease);flex-shrink:0;}
-.act-btn-minus{background:var(--surf-4);color:var(--text-2);}
-.act-btn-minus:hover{background:var(--surf-5);color:var(--text-1);}
-.act-btn-plus{background:var(--green-glow);color:var(--green);border:1px solid rgba(0,232,135,.2);}
-.act-btn-plus:hover{background:rgba(0,232,135,.25);}
-.act-btn:active{transform:scale(.88);}
-.ac-summary{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05);}
-.ac-sum-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);}
-.ac-sum-score{font-size:13px;font-weight:800;color:var(--green-text);}
+/* ── PIN LOCK SCREEN ── */
+.pin-screen{
+  position:fixed;inset:0;z-index:600;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 20px;
+  padding-bottom:max(28px,env(safe-area-inset-bottom));
+  text-align:center;
+  overflow:hidden;
+}
+.pin-screen.hidden{display:none;}
+.pin-logo{
+  width:58px;height:58px;border-radius:18px;
+  background:linear-gradient(135deg,var(--green-text),var(--green));
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin:0 auto 16px;
+  box-shadow:0 0 48px rgba(0,232,135,.3);
+}
+.pin-title{font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--text-1);margin-bottom:4px;}
+.pin-sub{font-size:11px;color:var(--text-2);margin-bottom:24px;letter-spacing:.02em;}
 
-/* WEEKLY SCOREBOARD */
-.weekly-card{background:var(--surf-2);border-radius:var(--r-xl);padding:20px;}
-.wk-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.wk-title-row{display:flex;align-items:center;gap:8px;}
-.wk-icon{width:30px;height:30px;border-radius:9px;background:var(--amber-glow);border:1px solid rgba(245,178,35,.15);display:flex;align-items:center;justify-content:center;font-size:14px;}
-.wk-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-1);}
-.wk-range{font-size:9px;color:var(--text-3);}
-.wk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.wk-cell{background:rgba(255,255,255,.02);border-radius:var(--r-md);padding:12px 14px;border:1px solid rgba(255,255,255,.04);}
-.wk-cell-label{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;}
-.wk-cell-val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1;}
-.wk-cell-sub{font-size:9px;color:var(--text-2);margin-top:3px;}
-.wk-conv-row{margin-top:10px;padding:12px 14px;background:rgba(255,255,255,.02);border-radius:var(--r-md);border:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;}
-.wk-conv-label{font-size:10px;font-weight:600;color:var(--text-2);}
-.wk-conv-val{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+/* Dots */
+.pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:24px;min-height:14px;}
+.pin-dot{
+  width:11px;height:11px;border-radius:50%;
+  background:var(--surf-4);
+  transition:background .15s ease,transform .1s ease;
+}
+.pin-dot.filled{background:var(--green);transform:scale(1.2);}
+.pin-dot.error{background:var(--red);}
 
-/* LEAD SOURCE TAG on lead cards */
-.src-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:7px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:rgba(94,184,255,.1);color:var(--blue);}
-/* MRR badge */
-.mrr-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:7px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:rgba(0,232,135,.1);color:var(--green);}
+/* Keypad wrapper */
+.pin-keypad-wrap{width:100%;max-width:300px;}
 
-/* LEAD SOURCE SELECTOR in modal */
-.source-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
-.source-chip{padding:5px 10px;border-radius:12px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(255,255,255,.08);background:var(--surf-3);color:var(--text-2);cursor:pointer;transition:var(--ease);}
-.source-chip.active{background:var(--blue-glow);color:var(--blue);border-color:rgba(94,184,255,.3);}
-.mrr-toggle{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surf-3);border-radius:10px;cursor:pointer;}
-.mrr-toggle-label{flex:1;font-size:13px;color:var(--text-1);}
-.mrr-toggle-sub{font-size:10px;color:var(--text-2);margin-top:1px;}
-.toggle-switch{width:38px;height:22px;background:var(--surf-5);border-radius:11px;position:relative;transition:var(--ease);flex-shrink:0;}
-.toggle-switch.on{background:var(--green-dim);}
-.toggle-thumb{width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:var(--ease);}
-.toggle-switch.on .toggle-thumb{left:19px;}
+/* Both panels share the same grid */
+.pin-panel{display:none;width:100%;}
+.pin-panel.active{display:block;}
+
+/* Number panel */
+.pin-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:9px;width:100%;
+}
+
+/* Alpha/symbol panel rows */
+.pin-row{display:flex;gap:6px;justify-content:center;margin-bottom:6px;}
+.pin-row:last-child{margin-bottom:0;}
+
+/* Key base styles */
+.pin-key{
+  background:var(--surf-2);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:13px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .12s ease,transform .1s ease;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  position:relative;
+}
+.pin-key:active{background:var(--surf-5);transform:scale(.92);}
+
+/* Number key sizing */
+.pin-num-key{
+  aspect-ratio:1;
+}
+.pin-key-num{font-size:22px;font-weight:700;color:var(--text-1);line-height:1;letter-spacing:-.3px;}
+.pin-key-alpha{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-top:3px;}
+
+/* Alpha key sizing */
+.pin-alpha-key{
+  min-width:30px;flex:1;max-width:36px;height:42px;
+  font-size:16px;font-weight:700;color:var(--text-1);
+  border-radius:10px;
+}
+.pin-sym-key{
+  min-width:30px;flex:1;max-width:42px;height:42px;
+  font-size:15px;font-weight:700;color:var(--text-1);
+  border-radius:10px;
+}
+
+/* Special keys */
+.pin-key-special{background:transparent;border-color:transparent;cursor:default;}
+.pin-key-special:active{background:transparent;transform:none;}
+.pin-key-delete{background:var(--surf-3);border-color:rgba(255,255,255,.08);}
+.pin-key-switch{
+  background:var(--surf-3);border-color:rgba(255,255,255,.1);
+  font-size:11px;font-weight:700;letter-spacing:.04em;
+  color:var(--text-2);
+}
+.pin-key-switch:active{color:var(--text-1);}
+.pin-key-space{
+  flex:3;max-width:none;height:42px;
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-3);border-radius:10px;
+}
+
+/* Shift key */
+.pin-key-shift{
+  background:var(--surf-3);border-color:rgba(255,255,255,.1);
+  width:42px;height:42px;flex:none;border-radius:10px;
+}
+.pin-key-shift.active-shift{background:var(--green-glow);border-color:rgba(0,232,135,.25);}
+.pin-shift-arrow{font-size:16px;color:var(--text-2);}
+.pin-key-shift.active-shift .pin-shift-arrow{color:var(--green);}
+
+/* Error */
+.pin-error-msg{font-size:11px;color:var(--red);margin-top:14px;min-height:16px;letter-spacing:.02em;}
+.pin-session-note{font-size:9px;color:var(--text-3);margin-top:16px;letter-spacing:.03em;}
+
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);};}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;};}
+
 </style>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -288,7 +350,12 @@ select.modal-inp option{background:#1a1e21;}
     <div class="hdr-mark">⚡</div>
     <span class="hdr-name">Revenue Engine</span>
   </div>
-  <div class="hdr-actions">
+  <div class="hdr-actions" style="display:flex;align-items:center;gap:8px;">
+    <div id="sync-indicator" style="display:flex;align-items:center;gap:5px;cursor:default;" title="Sync status">
+      <div class="sync-dot syncing" id="sync-dot"></div>
+      <span class="sync-label" id="sync-label">Connecting</span>
+    </div>
+
     <button class="icon-btn" id="btn-settings" title="Settings">⚙️</button>
   </div>
 </header>
@@ -645,35 +712,519 @@ select.modal-inp option{background:#1a1e21;}
 <div class="toast" id="toast"></div>
 
 <script>
-const KEYS={leads:'re_leads_v2',history:'re_history_v2',settings:'re_settings_v2'};
-const STORAGE_VERSION=2;
-try{localStorage.setItem('re_version',STORAGE_VERSION);}catch(e){}
 
-const STATUS_PROB={'Lead':10,'Contacted':25,'Pitch Sent':50,'Negotiation':70,'Waiting Response':80,'Closed Won':100,'Closed Lost':0};
-const STATUS_CLASS={'Lead':'sl-lead','Contacted':'sl-contacted','Pitch Sent':'sl-pitch','Negotiation':'sl-negotiation','Waiting Response':'sl-waiting','Closed Won':'sl-won','Closed Lost':'sl-lost'};
-const BADGE_CLASS={'Lead':'b-lead','Contacted':'b-contacted','Pitch Sent':'b-pitch','Negotiation':'b-negotiation','Waiting Response':'b-waiting','Closed Won':'b-won','Closed Lost':'b-lost'};
+// ════════════════════════════════════════════════════════════════
+//  PIN LOCK  — SHA-256 hash stored below (PIN not stored in source)
+//  Hash is computed client-side so raw PIN is never in the source
+// ════════════════════════════════════════════════════════════════
+const PIN_HASH_TARGET = 'a523f8cd1a43a6bb73b51f19c10bd2fcc30930d03f98c9ed75f72ffdb4d7c084';
+const PIN_SESSION_KEY = 're_pin_unlocked';
 
-// Safe localStorage parser -- handles corruption gracefully
-function safeParse(key,fallback){
-  try{
-    const raw=localStorage.getItem(key);
-    if(raw===null||raw===undefined) return fallback;
-    const parsed=JSON.parse(raw);
-    return (parsed!==null&&parsed!==undefined)?parsed:fallback;
-  }catch(e){
-    console.warn('Revenue Engine: corrupt storage key:',key,e);
-    try{localStorage.removeItem(key);}catch(e2){}
+let _pinBuffer = [];
+let _pinLocked = true;
+let _pinShift = true; // default uppercase
+let _pinPanel = 'num'; // 'num' | 'alpha' | 'sym'
+
+// SHA-256 via Web Crypto
+async function sha256(str) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// Switch between num / alpha / sym panels
+function switchPinPanel(panel) {
+  _pinPanel = panel;
+  document.getElementById('pin-panel-num').classList.toggle('active', panel === 'num');
+  document.getElementById('pin-panel-alpha').classList.toggle('active', panel === 'alpha');
+  document.getElementById('pin-panel-sym').classList.toggle('active', panel === 'sym');
+}
+
+// Toggle shift (upper/lower case) on alpha panel
+function togglePinShift() {
+  _pinShift = !_pinShift;
+  const btn = document.getElementById('pin-shift-btn');
+  if (btn) btn.classList.toggle('active-shift', _pinShift);
+  // Update all alpha keys
+  document.querySelectorAll('.pin-alpha-key').forEach(el => {
+    el.textContent = _pinShift ? el.textContent.toUpperCase() : el.textContent.toLowerCase();
+  });
+}
+
+// Called by alpha letter keys
+function pinKeyAlpha(char) {
+  const actual = _pinShift ? char.toUpperCase() : char.toLowerCase();
+  pinKey(actual);
+}
+
+// Core key press — shared by all panels
+function pinKey(char) {
+  if (_pinBuffer.length >= 7) return;
+  _pinBuffer.push(char);
+  updatePinDots();
+  if (_pinBuffer.length === 7) {
+    setTimeout(checkPin, 80);
+  }
+}
+
+function pinDelete() {
+  if (_pinBuffer.length === 0) return;
+  _pinBuffer.pop();
+  updatePinDots();
+  clearPinError();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 7; i++) {
+    const dot = document.getElementById('pd' + i);
+    if (!dot) continue;
+    dot.classList.toggle('filled', i < _pinBuffer.length);
+    dot.classList.remove('error');
+  }
+}
+
+async function checkPin() {
+  const entered = _pinBuffer.join('');
+  const hash = await sha256(entered);
+  if (hash === PIN_HASH_TARGET) {
+    sessionStorage.setItem(PIN_SESSION_KEY, '1');
+    _pinLocked = false;
+    hidePinScreen();
+    proceedAfterPin();
+  } else {
+    _pinBuffer = [];
+    showPinError();
+  }
+}
+
+function showPinError() {
+  for (let i = 0; i < 7; i++) {
+    const dot = document.getElementById('pd' + i);
+    if (dot) { dot.classList.add('error'); dot.style.animation = 'shake .35s ease'; }
+  }
+  const errEl = document.getElementById('pin-error');
+  if (errEl) errEl.textContent = 'Incorrect PIN. Try again.';
+  setTimeout(() => {
+    updatePinDots();
+    clearPinError();
+    document.querySelectorAll('.pin-dot').forEach(d => d.style.animation = '');
+  }, 700);
+}
+
+function clearPinError() {
+  const errEl = document.getElementById('pin-error');
+  if (errEl) errEl.textContent = '';
+}
+
+function showPinScreen() {
+  _pinBuffer = [];
+  _pinPanel = 'num';
+  switchPinPanel('num');
+  updatePinDots();
+  clearPinError();
+  document.getElementById('pin-screen').classList.remove('hidden');
+}
+
+function hidePinScreen() {
+  document.getElementById('pin-screen').classList.add('hidden');
+}
+
+// Hardware keyboard support
+document.addEventListener('keydown', function(e) {
+  if (!_pinLocked) return;
+  if (/^[0-9a-zA-Z\$\!\@\#\%\^\&\*\-\_\+\=\[\]\{\}\|\;\:\,\.\<\>\?\/ ]$/.test(e.key)) {
+    pinKey(e.key);
+  } else if (e.key === 'Backspace') {
+    pinDelete();
+  }
+});
+
+function proceedAfterPin() {
+  if (currentUser) {
+    bootstrapUser(currentUser);
+  } else {
+    signInAnonymouslySilent();
+  }
+}
+
+async function bootstrapUser(user) {
+  setSyncStatus('syncing', 'Syncing...');
+  try {
+    const [leadsSnap, histSnap, settSnap] = await Promise.all([
+      userPath().collection('meta').doc('leads').get(),
+      userPath().collection('meta').doc('history').get(),
+      settingsDoc().get()
+    ]);
+    _leadsCache = leadsSnap.exists ? (leadsSnap.data().data || []) : [];
+    _historyCache = histSnap.exists ? (histSnap.data().data || []) : [];
+    _settingsCache = settSnap.exists ? (settSnap.data() || {}) : {};
+    await loadWeeklyActivity();
+    if (_leadsCache.length === 0) seedData();
+    initUI();
+    startRealtimeSync();
+    setSyncStatus('synced', 'Live');
+  } catch(e) {
+    console.error('Bootstrap error:', e);
+    setSyncStatus('error', 'Sync error');
+    initUI();
+  }
+}
+
+function checkPinOnStart() {
+  const unlocked = sessionStorage.getItem(PIN_SESSION_KEY);
+  if (unlocked === '1') {
+    _pinLocked = false;
+    hidePinScreen();
+  } else {
+    showPinScreen();
+  }
+}
+
+
+// ════════════════════════════════════════
+//  FIREBASE CONFIG + INIT
+// ════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyD4dflsab_8SeTXeeP8WHW81eTFpytmK1o",
+  authDomain: "clientlist-586f9.firebaseapp.com",
+  projectId: "clientlist-586f9",
+  appId: "1:779282938514:web:6dd1ec0d1021da3fe6044b"
+};
+firebase.initializeApp(FB_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let currentUser = null;
+let unsubLeads = null;
+let unsubSettings = null;
+let _leadsCache = [];
+let _historyCache = [];
+let _settingsCache = {};
+let _syncListeners = []; // registered Firestore unsubscribers
+
+// ════════════════════════════════════════
+//  SYNC STATUS UI
+// ════════════════════════════════════════
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if(dot) { dot.className = 'sync-dot ' + state; }
+  if(lbl) lbl.textContent = label;
+}
+
+// ════════════════════════════════════════
+//  USER PATHS  (per-user Firestore collections)
+// ════════════════════════════════════════
+function userPath() {
+  if (!currentUser) return null;
+  return db.collection('users').doc(currentUser.uid);
+}
+function leadsCol() { return userPath().collection('leads'); }
+function historyCol() { return userPath().collection('history'); }
+function settingsDoc() { return userPath().collection('meta').doc('settings'); }
+function activityDoc(dateKey) { return userPath().collection('activity').doc(dateKey); }
+
+// ════════════════════════════════════════
+//  SAFE LOCAL PARSE (for activity log only)
+// ════════════════════════════════════════
+const KEYS = { leads:'re_leads_v2', history:'re_history_v2', settings:'re_settings_v2' };
+const STORAGE_VERSION = 2;
+try { localStorage.setItem('re_version', STORAGE_VERSION); } catch(e) {}
+
+function safeParse(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null || raw === undefined) return fallback;
+    const parsed = JSON.parse(raw);
+    return (parsed !== null && parsed !== undefined) ? parsed : fallback;
+  } catch(e) {
+    console.warn('Revenue Engine: corrupt storage key:', key, e);
+    try { localStorage.removeItem(key); } catch(e2) {}
     return fallback;
   }
 }
-function loadLeads(){return safeParse(KEYS.leads,[]);}
-function saveLeads(d){localStorage.setItem(KEYS.leads,JSON.stringify(d));}
-function loadHistory(){return safeParse(KEYS.history,[]);}
-function saveHistory(d){localStorage.setItem(KEYS.history,JSON.stringify(d.slice(0,200)));}
-function loadSettings(){const def={monthlyGoal:5000,leadsGoal:15,dealsGoal:5,convGoal:30};const saved=safeParse(KEYS.settings,{});return{...def,...saved};}
-function saveSettings(s){localStorage.setItem(KEYS.settings,JSON.stringify(s));}
-function addHistory(type,company,details){const h=loadHistory();h.unshift({type,company,details,timestamp:new Date().toISOString(),id:Date.now()});saveHistory(h);}
-function genId(){return`lead_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;}
+
+// ════════════════════════════════════════
+//  LEADS  (Firestore-backed)
+// ════════════════════════════════════════
+function loadLeads() {
+  return _leadsCache.slice(); // return copy of in-memory cache
+}
+
+async function saveLeads(leadsArray) {
+  _leadsCache = leadsArray;
+  if (!currentUser) {
+    // offline fallback
+    localStorage.setItem(KEYS.leads, JSON.stringify(leadsArray));
+    return;
+  }
+  setSyncStatus('syncing','Saving...');
+  try {
+    const batch = db.batch();
+    // We store the full array as a single document for simplicity + speed
+    // (Firestore limit: 1MB per doc — fine for <500 leads)
+    batch.set(userPath().collection('meta').doc('leads'), { data: leadsArray, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await batch.commit();
+    setSyncStatus('synced','Synced');
+  } catch(e) {
+    console.error('saveLeads error:', e);
+    setSyncStatus('error','Sync error');
+    localStorage.setItem(KEYS.leads, JSON.stringify(leadsArray)); // local backup
+  }
+}
+
+// ════════════════════════════════════════
+//  HISTORY  (Firestore-backed)
+// ════════════════════════════════════════
+function loadHistory() {
+  return _historyCache.slice();
+}
+
+async function saveHistory(historyArray) {
+  _historyCache = historyArray.slice(0, 200);
+  if (!currentUser) {
+    localStorage.setItem(KEYS.history, JSON.stringify(_historyCache));
+    return;
+  }
+  try {
+    await userPath().collection('meta').doc('history').set(
+      { data: _historyCache, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+  } catch(e) {
+    console.error('saveHistory error:', e);
+    localStorage.setItem(KEYS.history, JSON.stringify(_historyCache));
+  }
+}
+
+function addHistory(type, company, details) {
+  const h = loadHistory();
+  h.unshift({ type, company, details, timestamp: new Date().toISOString(), id: Date.now() });
+  saveHistory(h);
+}
+
+// ════════════════════════════════════════
+//  SETTINGS  (Firestore-backed)
+// ════════════════════════════════════════
+const DEFAULT_SETTINGS = { monthlyGoal:5000, leadsGoal:15, dealsGoal:5, convGoal:30,
+  weeklyContacts:10, weeklyConvos:3, weeklyPitches:1, weeklyFollowups:5 };
+
+function loadSettings() {
+  return { ...DEFAULT_SETTINGS, ..._settingsCache };
+}
+
+async function saveSettings(s) {
+  _settingsCache = { ...s };
+  if (!currentUser) {
+    localStorage.setItem(KEYS.settings, JSON.stringify(s));
+    return;
+  }
+  try {
+    await settingsDoc().set(s, { merge: true });
+  } catch(e) {
+    console.error('saveSettings error:', e);
+    localStorage.setItem(KEYS.settings, JSON.stringify(s));
+  }
+}
+
+// ════════════════════════════════════════
+//  ACTIVITY LOG  (Firestore-backed, keyed by date)
+// ════════════════════════════════════════
+let _activityCache = {}; // { 'act_2025-01-01': { contacts: 3, ... } }
+
+function todayKey() { return 'act_' + new Date().toISOString().split('T')[0]; }
+
+function loadActivityLog() {
+  const k = todayKey();
+  return _activityCache[k] || {};
+}
+
+async function saveActivityLog(data) {
+  const k = todayKey();
+  _activityCache[k] = data;
+  if (!currentUser) {
+    try { localStorage.setItem(k, JSON.stringify(data)); } catch(e) {}
+    return;
+  }
+  try {
+    await activityDoc(k).set({ data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  } catch(e) {
+    console.error('saveActivityLog error:', e);
+    try { localStorage.setItem(k, JSON.stringify(data)); } catch(e2) {}
+  }
+}
+
+// Load this week's activity from Firestore into cache
+async function loadWeeklyActivity() {
+  if (!currentUser) {
+    // fallback: read from localStorage
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const key = 'act_' + d.toISOString().split('T')[0];
+      _activityCache[key] = safeParse(key, {});
+    }
+    return;
+  }
+  try {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+    const keys = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      keys.push('act_' + d.toISOString().split('T')[0]);
+    }
+    const fetches = keys.map(k => activityDoc(k).get());
+    const docs = await Promise.all(fetches);
+    docs.forEach((snap, i) => {
+      _activityCache[keys[i]] = snap.exists ? (snap.data().data || {}) : {};
+    });
+  } catch(e) {
+    console.error('loadWeeklyActivity error:', e);
+  }
+}
+
+function getActivityCount(id) {
+  const log = loadActivityLog();
+  return Math.max(0, parseInt(log[id] || 0));
+}
+function setActivityCount(id, val) {
+  const log = loadActivityLog();
+  log[id] = Math.max(0, val);
+  saveActivityLog(log);
+}
+
+// ════════════════════════════════════════
+//  MISC HELPERS
+// ════════════════════════════════════════
+function genId() { return 'lead_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); }
+
+// ════════════════════════════════════════
+//  REAL-TIME LISTENERS
+// ════════════════════════════════════════
+function startRealtimeSync() {
+  // Unsubscribe any previous listeners
+  _syncListeners.forEach(fn => fn());
+  _syncListeners = [];
+
+  setSyncStatus('syncing', 'Syncing...');
+
+  // Listen to leads doc
+  const unsubL = userPath().collection('meta').doc('leads').onSnapshot(snap => {
+    if (snap.exists) {
+      _leadsCache = snap.data().data || [];
+    } else {
+      _leadsCache = [];
+    }
+    refreshAll();
+    renderLeads();
+    setSyncStatus('synced', 'Live');
+  }, err => {
+    console.error('leads listener error:', err);
+    setSyncStatus('error', 'Error');
+  });
+  _syncListeners.push(unsubL);
+
+  // Listen to history doc
+  const unsubH = userPath().collection('meta').doc('history').onSnapshot(snap => {
+    if (snap.exists) {
+      _historyCache = snap.data().data || [];
+    } else {
+      _historyCache = [];
+    }
+    renderHistory();
+  }, err => { console.error('history listener:', err); });
+  _syncListeners.push(unsubH);
+
+  // Listen to settings doc
+  const unsubS = settingsDoc().onSnapshot(snap => {
+    if (snap.exists) {
+      _settingsCache = snap.data() || {};
+    }
+    refreshAll();
+  }, err => { console.error('settings listener:', err); });
+  _syncListeners.push(unsubS);
+}
+
+function stopRealtimeSync() {
+  _syncListeners.forEach(fn => fn());
+  _syncListeners = [];
+}
+
+// ════════════════════════════════════════
+//  AUTH — ANONYMOUS ONLY (silent, automatic)
+// ════════════════════════════════════════
+// No login UI. Firebase anonymous auth silently provisions a persistent
+// account tied to this browser. PIN is the only gate.
+async function signInAnonymouslySilent() {
+  try {
+    await auth.signInAnonymously();
+    // onAuthStateChanged fires and bootstraps everything
+  } catch(e) {
+    console.error('Anonymous sign-in error:', e);
+    setSyncStatus('error', 'Auth error');
+    // Fallback: load from localStorage so app still works
+    _leadsCache = safeParse(KEYS.leads, []);
+    _historyCache = safeParse(KEYS.history, []);
+    _settingsCache = safeParse(KEYS.settings, {});
+    if (_leadsCache.length === 0) seedData();
+    setSyncStatus('offline', 'Offline');
+    initUI();
+  }
+}
+
+// ════════════════════════════════════════
+//  BOOTSTRAP
+// ════════════════════════════════════════
+auth.onAuthStateChanged(async function(user) {
+  if (_pinLocked) return; // wait for PIN — see PIN lock section above
+  currentUser = user;
+  if (user) {
+    // Anonymous user provisioned — load data and start sync
+    setSyncStatus('syncing', 'Syncing...');
+    try {
+      const [leadsSnap, histSnap, settSnap] = await Promise.all([
+        userPath().collection('meta').doc('leads').get(),
+        userPath().collection('meta').doc('history').get(),
+        settingsDoc().get()
+      ]);
+      _leadsCache = leadsSnap.exists ? (leadsSnap.data().data || []) : [];
+      _historyCache = histSnap.exists ? (histSnap.data().data || []) : [];
+      _settingsCache = settSnap.exists ? (settSnap.data() || {}) : {};
+      await loadWeeklyActivity();
+      if (_leadsCache.length === 0) seedData();
+      initUI();
+      startRealtimeSync();
+      setSyncStatus('synced', 'Live');
+    } catch(e) {
+      console.error('Bootstrap error:', e);
+      setSyncStatus('error', 'Sync error');
+      // Still render with whatever we have cached
+      initUI();
+    }
+  } else {
+    // No user yet — trigger silent anonymous sign-in
+    signInAnonymouslySilent();
+  }
+});
+
+function initUI() {
+  refreshAll();
+  renderHistory();
+  renderLeads();
+  attachGoalEdit(document.getElementById('closed-revenue-display'));
+}
+
 
 function fmt$(v){if(v===undefined||v===null||isNaN(v))return'$0';const n=parseFloat(v);if(n>=1000000)return'$'+(n/1000000).toFixed(1)+'M';if(n>=1000)return'$'+(n/1000).toFixed(1)+'k';return'$'+Math.round(n).toLocaleString();}
 function fmtDate(iso){if(!iso)return'—';const d=new Date(iso);if(isNaN(d))return'—';return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
@@ -796,7 +1347,8 @@ function updateSimulation(){
 
 function updateDashboard(){
   const leads=loadLeads();const settings=loadSettings();const m=computeMetrics(leads);
-  setText('closed-revenue-display',fmt$(m.closedRevenue));
+  const revEl=document.getElementById('closed-revenue-display');
+  if(revEl&&revEl.tagName!=='INPUT') revEl.textContent=fmt$(m.closedRevenue);
   setText('monthly-goal-display',fmt$(m.goal));
   setWidth('progress-fill',m.progressPct+'%');
   const badge=document.getElementById('track-badge');
@@ -1013,23 +1565,26 @@ document.getElementById('history-search')?.addEventListener('input',filterHistor
 function showToast(msg,dur=2100){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 
 function daysAgoISO(d){const dt=new Date();dt.setDate(dt.getDate()-d);return dt.toISOString().split('T')[0];}
-function seedIfEmpty(){
-  if(loadLeads().length>0)return;
+function seedData(){
+  // Called by auth flow when user has no existing data
   const samples=[
-    {company:'Acme Corp',contact:'John Baker',value:12500,status:'Negotiation',prob:80,lastContact:daysAgoISO(1),followupDate:daysAgoISO(-3),notes:'Decision expected this week',nextAction:'Prepare contract for review'},
-    {company:'Cyberdyne Systems',contact:'Sarah Connor',value:8200,status:'Waiting Response',prob:60,lastContact:daysAgoISO(9),followupDate:daysAgoISO(-1),notes:'Sent revised proposal',nextAction:'Follow up if no reply by Friday'},
-    {company:'Initech LLC',contact:'Bill Lumbergh',value:4800,status:'Pitch Sent',prob:45,lastContact:daysAgoISO(3),followupDate:'',notes:'Follow up after board meeting',nextAction:'Schedule a demo call'},
-    {company:'Globex Corp',contact:'Hank Scorpio',value:15000,status:'Closed Won',prob:100,lastContact:daysAgoISO(5),followupDate:'',notes:'Signed! 3-month contract',nextAction:''},
-    {company:'Hooli Inc',contact:'Gavin Belson',value:22000,status:'Lead',prob:10,lastContact:'',followupDate:daysAgoISO(-7),notes:'Cold intro via LinkedIn',nextAction:'Nurture with case study'}
+    {company:'Acme Corp',contact:'John Baker',value:12500,status:'Negotiation',prob:80,lastContact:daysAgoISO(1),followupDate:daysAgoISO(-3),notes:'Decision expected this week',nextAction:'Prepare contract for review',source:'Referral',dealType:'project',mrrAmount:0},
+    {company:'Cyberdyne Systems',contact:'Sarah Connor',value:8200,status:'Waiting Response',prob:60,lastContact:daysAgoISO(9),followupDate:daysAgoISO(-1),notes:'Sent revised proposal',nextAction:'Follow up if no reply by Friday',source:'Instagram',dealType:'project',mrrAmount:0},
+    {company:'Initech LLC',contact:'Bill Lumbergh',value:4800,status:'Pitch Sent',prob:45,lastContact:daysAgoISO(3),followupDate:'',notes:'Follow up after board meeting',nextAction:'Schedule a demo call',source:'Cold DM',dealType:'project',mrrAmount:0},
+    {company:'Globex Corp',contact:'Hank Scorpio',value:0,status:'Closed Won',prob:100,lastContact:daysAgoISO(5),followupDate:'',notes:'Monthly retainer signed',nextAction:'',source:'Referral',dealType:'mrr',mrrAmount:99},
+    {company:'Hooli Inc',contact:'Gavin Belson',value:22000,status:'Lead',prob:10,lastContact:'',followupDate:daysAgoISO(-7),notes:'Cold intro via LinkedIn',nextAction:'Nurture with case study',source:'LinkedIn',dealType:'project',mrrAmount:0}
   ];
   const now=new Date().toISOString();
-  saveLeads(samples.map((s,i)=>({...s,id:genId(),createdAt:new Date(Date.now()-i*86400000).toISOString(),updatedAt:now})));
-  saveHistory([
-    {type:'win',company:'Globex Corp',details:'Deal won: $15,000',timestamp:daysAgoISO(5),id:Date.now()+1},
+  const seeded=samples.map((s,i)=>({...s,id:genId(),createdAt:new Date(Date.now()-i*86400000).toISOString(),updatedAt:now}));
+  _leadsCache=seeded;
+  _historyCache=[
+    {type:'win',company:'Globex Corp',details:'MRR retainer: $99/mo',timestamp:daysAgoISO(5),id:Date.now()+1},
     {type:'new',company:'Hooli Inc',details:'New lead added: $22,000',timestamp:daysAgoISO(3),id:Date.now()+2},
     {type:'status',company:'Initech LLC',details:'Status changed from Lead to Pitch Sent',timestamp:daysAgoISO(2),id:Date.now()+3},
     {type:'new',company:'Acme Corp',details:'New lead added: $12,500',timestamp:daysAgoISO(7),id:Date.now()+4}
-  ]);
+  ];
+  saveLeads(seeded);
+  saveHistory(_historyCache);
 }
 
 
@@ -1227,22 +1782,194 @@ function importData(file){
   reader.readAsText(file);
 }
 
-function clearAllData(){
+async function clearAllData(){
   if(!confirm('Delete ALL leads, history, and settings? This cannot be undone.')) return;
   if(!confirm('Final confirmation: delete everything?')) return;
+  _leadsCache=[];_historyCache=[];_settingsCache={};
   Object.values(KEYS).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  if(currentUser){
+    try{
+      await userPath().collection('meta').doc('leads').delete();
+      await userPath().collection('meta').doc('history').delete();
+      await settingsDoc().delete();
+    }catch(e){console.error('Clear Firestore error:',e);}
+  }
   refreshAll();renderHistory();
   showToast('All data cleared');
 }
 
 document.addEventListener('DOMContentLoaded',function(){
-  seedIfEmpty();
-  refreshAll();
-  renderHistory();
-  // Attach named goal-edit handler to static element
-  attachGoalEdit(document.getElementById('closed-revenue-display'));
+  // PIN check first — nothing runs until correct PIN is entered
+  // After PIN: proceedAfterPin() triggers silent anonymous Firebase auth
+  // onAuthStateChanged then bootstraps all data and starts real-time sync
+  checkPinOnStart();
 });
 
 </script>
+
+<!-- PIN LOCK SCREEN -->
+<div class="pin-screen" id="pin-screen">
+  <div class="pin-logo">&#x26A1;</div>
+  <div class="pin-title">Revenue Engine</div>
+  <div class="pin-sub">Enter your PIN to continue</div>
+
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+    <div class="pin-dot" id="pd4"></div>
+    <div class="pin-dot" id="pd5"></div>
+    <div class="pin-dot" id="pd6"></div>
+  </div>
+
+  <div class="pin-keypad-wrap">
+
+    <!-- NUMBER PANEL -->
+    <div class="pin-panel active" id="pin-panel-num">
+      <div class="pin-grid">
+        <div class="pin-key pin-num-key" onclick="pinKey('1')"><div class="pin-key-num">1</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('2')"><div class="pin-key-num">2</div><div class="pin-key-alpha">ABC</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('3')"><div class="pin-key-num">3</div><div class="pin-key-alpha">DEF</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('4')"><div class="pin-key-num">4</div><div class="pin-key-alpha">GHI</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('5')"><div class="pin-key-num">5</div><div class="pin-key-alpha">JKL</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('6')"><div class="pin-key-num">6</div><div class="pin-key-alpha">MNO</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('7')"><div class="pin-key-num">7</div><div class="pin-key-alpha">PQRS</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('8')"><div class="pin-key-num">8</div><div class="pin-key-alpha">TUV</div></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('9')"><div class="pin-key-num">9</div><div class="pin-key-alpha">WXYZ</div></div>
+        <div class="pin-key pin-num-key pin-key-switch" onclick="switchPinPanel('alpha')" style="font-size:12px;font-weight:800;letter-spacing:.02em;color:var(--text-2);">ABC<br><span style="font-size:9px;letter-spacing:.08em;">#+=</span></div>
+        <div class="pin-key pin-num-key" onclick="pinKey('0')"><div class="pin-key-num">0</div></div>
+        <div class="pin-key pin-num-key pin-key-delete" onclick="pinDelete()">
+          <svg width="22" height="16" fill="none" viewBox="0 0 22 16">
+            <path d="M8 1H19a2 2 0 012 2v10a2 2 0 01-2 2H8l-7-7 7-7z" stroke="#8899a6" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M14 6l-4 4M10 6l4 4" stroke="#8899a6" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALPHA PANEL (letters + symbols) -->
+    <div class="pin-panel" id="pin-panel-alpha">
+
+      <!-- Row 1: Q W E R T Y U I O P -->
+      <div class="pin-row">
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('Q')">Q</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('W')">W</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('E')">E</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('R')">R</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('T')">T</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('Y')">Y</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('U')">U</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('I')">I</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('O')">O</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('P')">P</div>
+      </div>
+
+      <!-- Row 2: A S D F G H J K L -->
+      <div class="pin-row" style="padding:0 14px;">
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('A')">A</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('S')">S</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('D')">D</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('F')">F</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('G')">G</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('H')">H</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('J')">J</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('K')">K</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('L')">L</div>
+      </div>
+
+      <!-- Row 3: SHIFT Z X C V B N M DELETE -->
+      <div class="pin-row">
+        <div class="pin-key pin-key-shift" id="pin-shift-btn" onclick="togglePinShift()">
+          <span class="pin-shift-arrow">&#x21E7;</span>
+        </div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('Z')">Z</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('X')">X</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('C')">C</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('V')">V</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('B')">B</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('N')">N</div>
+        <div class="pin-key pin-alpha-key" onclick="pinKeyAlpha('M')">M</div>
+        <div class="pin-key pin-key-delete" style="width:42px;height:42px;flex:none;border-radius:10px;" onclick="pinDelete()">
+          <svg width="20" height="14" fill="none" viewBox="0 0 22 16">
+            <path d="M8 1H19a2 2 0 012 2v10a2 2 0 01-2 2H8l-7-7 7-7z" stroke="#8899a6" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M14 6l-4 4M10 6l4 4" stroke="#8899a6" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Row 4: 123 / SYMBOLS   SPACE   . -->
+      <div class="pin-row" style="gap:8px;">
+        <div class="pin-key pin-key-switch" style="width:52px;height:42px;flex:none;border-radius:10px;font-size:11px;font-weight:800;color:var(--text-2);" onclick="switchPinPanel('sym')">#+&amp;=</div>
+        <div class="pin-key pin-key-space" onclick="pinKey(' ')">space</div>
+        <div class="pin-key pin-key-switch" style="width:52px;height:42px;flex:none;border-radius:10px;font-size:12px;font-weight:800;color:var(--text-2);" onclick="switchPinPanel('num')">123</div>
+      </div>
+    </div>
+
+    <!-- SYMBOL PANEL -->
+    <div class="pin-panel" id="pin-panel-sym">
+
+      <!-- Row 1: [ ] { } # % ^ * + = -->
+      <div class="pin-row">
+        <div class="pin-key pin-sym-key" onclick="pinKey('[')">&#x5B;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey(']')">&#x5D;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('{')">&#x7B;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('}')">&#x7D;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('#')">#</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('%')">%</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('^')">^</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('*')">*</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('+')">+</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('=')">=</div>
+      </div>
+
+      <!-- Row 2: _ \ | ~ < > $ ! & @ -->
+      <div class="pin-row">
+        <div class="pin-key pin-sym-key" onclick="pinKey('_')">_</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('\')">&#x5C;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('|')">&#x7C;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('~')">~</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('<')">&lt;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('>')">&gt;</div>
+        <div class="pin-key pin-sym-key" style="color:var(--green);border-color:rgba(0,232,135,.25);background:var(--green-glow);" onclick="pinKey('$')">$</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('!')">!</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('&')">&amp;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('@')">@</div>
+      </div>
+
+      <!-- Row 3: . , ? / ' " ; : delete -->
+      <div class="pin-row">
+        <div class="pin-key pin-sym-key" onclick="pinKey('.')">.</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey(',')">&#x2C;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('?')">?</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('/')">/</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey(&quot;'&quot;)">&apos;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey('&quot;')">&quot;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey(';')">;</div>
+        <div class="pin-key pin-sym-key" onclick="pinKey(':')">:</div>
+        <div class="pin-key pin-key-delete" style="flex:1;max-width:52px;height:42px;border-radius:10px;" onclick="pinDelete()">
+          <svg width="20" height="14" fill="none" viewBox="0 0 22 16">
+            <path d="M8 1H19a2 2 0 012 2v10a2 2 0 01-2 2H8l-7-7 7-7z" stroke="#8899a6" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M14 6l-4 4M10 6l4 4" stroke="#8899a6" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Row 4: ABC   SPACE   123 -->
+      <div class="pin-row" style="gap:8px;">
+        <div class="pin-key pin-key-switch" style="width:52px;height:42px;flex:none;border-radius:10px;font-size:12px;font-weight:800;color:var(--text-2);" onclick="switchPinPanel('alpha')">ABC</div>
+        <div class="pin-key pin-key-space" onclick="pinKey(' ')">space</div>
+        <div class="pin-key pin-key-switch" style="width:52px;height:42px;flex:none;border-radius:10px;font-size:12px;font-weight:800;color:var(--text-2);" onclick="switchPinPanel('num')">123</div>
+      </div>
+
+    </div>
+
+  </div><!-- /pin-keypad-wrap -->
+
+  <div class="pin-error-msg" id="pin-error"></div>
+  <div class="pin-session-note">Session expires when you close the app</div>
+</div>
+
+
 </body>
 </html>
