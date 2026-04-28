@@ -333,8 +333,6 @@ select.modal-inp option{background:#1a1e21;}
 .pin-error-msg{font-size:11px;color:var(--red);margin-top:14px;min-height:16px;letter-spacing:.02em;}
 .pin-session-note{font-size:9px;color:var(--text-3);margin-top:16px;letter-spacing:.03em;}
 
-@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);};}
-@keyframes fadeIn{from{opacity:0;}to{opacity:1;};}
 /* ACTIVITY TRACKER */
 .activity-card{background:var(--surf-2);border-radius:var(--r-xl);padding:20px 20px 18px;}
 .ac-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
@@ -384,6 +382,8 @@ select.modal-inp option{background:#1a1e21;}
 .wk-conv-label{font-size:11px;font-weight:600;color:var(--text-2);}
 .wk-conv-val{font-size:18px;font-weight:800;letter-spacing:-.5px;}
 
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-7px);}40%{transform:translateX(7px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);};}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;};}
 
 </style>
 
@@ -904,9 +904,20 @@ async function bootstrapUser(user) {
       userPath().collection('meta').doc('history').get(),
       settingsDoc().get()
     ]);
-    _leadsCache = leadsSnap.exists ? (leadsSnap.data().data || []) : [];
-    _historyCache = histSnap.exists ? (histSnap.data().data || []) : [];
-    _settingsCache = settSnap.exists ? (settSnap.data() || {}) : {};
+    // Load from Firestore, fall back to localStorage if Firestore is empty
+    _leadsCache = leadsSnap.exists
+      ? (leadsSnap.data().data || [])
+      : safeParse(KEYS.leads, []);
+    _historyCache = histSnap.exists
+      ? (histSnap.data().data || [])
+      : safeParse(KEYS.history, []);
+    _settingsCache = settSnap.exists
+      ? (settSnap.data() || {})
+      : safeParse(KEYS.settings, {});
+    // If localStorage had data but Firestore didn't, push it up now
+    if (!leadsSnap.exists && _leadsCache.length > 0) {
+      saveLeads(_leadsCache);
+    }
     await loadWeeklyActivity();
     if (_leadsCache.length === 0) seedData();
     initUI();
@@ -915,6 +926,11 @@ async function bootstrapUser(user) {
   } catch(e) {
     console.error('Bootstrap error:', e);
     setSyncStatus('error', 'Sync error');
+    // Fall back entirely to localStorage
+    _leadsCache = safeParse(KEYS.leads, []);
+    _historyCache = safeParse(KEYS.history, []);
+    _settingsCache = safeParse(KEYS.settings, {});
+    if (_leadsCache.length === 0) seedData();
     initUI();
   }
 }
@@ -942,6 +958,17 @@ const FB_CONFIG = {
 firebase.initializeApp(FB_CONFIG);
 const auth = firebase.auth();
 const db   = firebase.firestore();
+
+// Enable offline persistence so data survives refresh and brief network loss
+db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
+  if (err.code === 'failed-precondition') {
+    // Multiple tabs open — persistence only works in one tab at a time
+    console.warn('Firestore persistence: multiple tabs open');
+  } else if (err.code === 'unimplemented') {
+    // Browser doesn't support persistence
+    console.warn('Firestore persistence not supported in this browser');
+  }
+});
 
 // ════════════════════════════════════════
 //  STATE
@@ -1005,23 +1032,18 @@ function loadLeads() {
 
 async function saveLeads(leadsArray) {
   _leadsCache = leadsArray;
-  if (!currentUser) {
-    // offline fallback
-    localStorage.setItem(KEYS.leads, JSON.stringify(leadsArray));
-    return;
-  }
+  // Always write localStorage as instant local backup
+  try { localStorage.setItem(KEYS.leads, JSON.stringify(leadsArray)); } catch(e) {}
+  if (!currentUser) return;
   setSyncStatus('syncing','Saving...');
   try {
-    const batch = db.batch();
-    // We store the full array as a single document for simplicity + speed
-    // (Firestore limit: 1MB per doc — fine for <500 leads)
-    batch.set(userPath().collection('meta').doc('leads'), { data: leadsArray, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    await batch.commit();
+    await userPath().collection('meta').doc('leads').set(
+      { data: leadsArray, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }
+    );
     setSyncStatus('synced','Synced');
   } catch(e) {
     console.error('saveLeads error:', e);
     setSyncStatus('error','Sync error');
-    localStorage.setItem(KEYS.leads, JSON.stringify(leadsArray)); // local backup
   }
 }
 
@@ -1034,18 +1056,14 @@ function loadHistory() {
 
 async function saveHistory(historyArray) {
   _historyCache = historyArray.slice(0, 200);
-  if (!currentUser) {
-    localStorage.setItem(KEYS.history, JSON.stringify(_historyCache));
-    return;
-  }
+  try { localStorage.setItem(KEYS.history, JSON.stringify(_historyCache)); } catch(e) {}
+  if (!currentUser) return;
   try {
     await userPath().collection('meta').doc('history').set(
-      { data: _historyCache, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
-      { merge: true }
+      { data: _historyCache, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }
     );
   } catch(e) {
     console.error('saveHistory error:', e);
-    localStorage.setItem(KEYS.history, JSON.stringify(_historyCache));
   }
 }
 
@@ -1067,15 +1085,12 @@ function loadSettings() {
 
 async function saveSettings(s) {
   _settingsCache = { ...s };
-  if (!currentUser) {
-    localStorage.setItem(KEYS.settings, JSON.stringify(s));
-    return;
-  }
+  try { localStorage.setItem(KEYS.settings, JSON.stringify(s)); } catch(e) {}
+  if (!currentUser) return;
   try {
     await settingsDoc().set(s, { merge: true });
   } catch(e) {
     console.error('saveSettings error:', e);
-    localStorage.setItem(KEYS.settings, JSON.stringify(s));
   }
 }
 
@@ -1168,37 +1183,40 @@ function startRealtimeSync() {
 
   setSyncStatus('syncing', 'Syncing...');
 
-  // Listen to leads doc
+  let _firstLeadsSnap = true;
+  let _firstSettSnap = true;
+
+  // Listen to leads doc — skip first snapshot (already loaded in bootstrap)
   const unsubL = userPath().collection('meta').doc('leads').onSnapshot(snap => {
-    if (snap.exists) {
-      _leadsCache = snap.data().data || [];
-    } else {
-      _leadsCache = [];
-    }
+    const newData = snap.exists ? (snap.data().data || []) : [];
+    if (_firstLeadsSnap) { _firstLeadsSnap = false; return; } // skip echo of bootstrap load
+    _leadsCache = newData;
+    try { localStorage.setItem(KEYS.leads, JSON.stringify(_leadsCache)); } catch(e) {}
     refreshAll();
-    renderLeads();
+    const activeTab = document.querySelector('.tab-pane.active');
+    if (activeTab && activeTab.id === 'tab-leads') renderLeads();
     setSyncStatus('synced', 'Live');
   }, err => {
     console.error('leads listener error:', err);
-    setSyncStatus('error', 'Error');
+    setSyncStatus('error', 'Sync error');
   });
   _syncListeners.push(unsubL);
 
   // Listen to history doc
   const unsubH = userPath().collection('meta').doc('history').onSnapshot(snap => {
-    if (snap.exists) {
-      _historyCache = snap.data().data || [];
-    } else {
-      _historyCache = [];
-    }
-    renderHistory();
+    _historyCache = snap.exists ? (snap.data().data || []) : [];
+    try { localStorage.setItem(KEYS.history, JSON.stringify(_historyCache)); } catch(e) {}
+    const activeTab = document.querySelector('.tab-pane.active');
+    if (activeTab && activeTab.id === 'tab-history') renderHistory();
   }, err => { console.error('history listener:', err); });
   _syncListeners.push(unsubH);
 
-  // Listen to settings doc
+  // Listen to settings doc — skip first snapshot
   const unsubS = settingsDoc().onSnapshot(snap => {
+    if (_firstSettSnap) { _firstSettSnap = false; return; }
     if (snap.exists) {
       _settingsCache = snap.data() || {};
+      try { localStorage.setItem(KEYS.settings, JSON.stringify(_settingsCache)); } catch(e) {}
     }
     refreshAll();
   }, err => { console.error('settings listener:', err); });
@@ -1236,33 +1254,12 @@ async function signInAnonymouslySilent() {
 //  BOOTSTRAP
 // ════════════════════════════════════════
 auth.onAuthStateChanged(async function(user) {
-  if (_pinLocked) return; // wait for PIN — see PIN lock section above
+  // Always capture user — even if PIN locked, we need the UID stored
   currentUser = user;
+  if (_pinLocked) return; // PIN not yet entered — UI bootstrap will happen in proceedAfterPin
   if (user) {
-    // Anonymous user provisioned — load data and start sync
-    setSyncStatus('syncing', 'Syncing...');
-    try {
-      const [leadsSnap, histSnap, settSnap] = await Promise.all([
-        userPath().collection('meta').doc('leads').get(),
-        userPath().collection('meta').doc('history').get(),
-        settingsDoc().get()
-      ]);
-      _leadsCache = leadsSnap.exists ? (leadsSnap.data().data || []) : [];
-      _historyCache = histSnap.exists ? (histSnap.data().data || []) : [];
-      _settingsCache = settSnap.exists ? (settSnap.data() || {}) : {};
-      await loadWeeklyActivity();
-      if (_leadsCache.length === 0) seedData();
-      initUI();
-      startRealtimeSync();
-      setSyncStatus('synced', 'Live');
-    } catch(e) {
-      console.error('Bootstrap error:', e);
-      setSyncStatus('error', 'Sync error');
-      // Still render with whatever we have cached
-      initUI();
-    }
+    await bootstrapUser(user);
   } else {
-    // No user yet — trigger silent anonymous sign-in
     signInAnonymouslySilent();
   }
 });
@@ -1835,15 +1832,22 @@ async function clearAllData(){
   if(!confirm('Delete ALL leads, history, and settings? This cannot be undone.')) return;
   if(!confirm('Final confirmation: delete everything?')) return;
   _leadsCache=[];_historyCache=[];_settingsCache={};
+  // Clear localStorage
   Object.values(KEYS).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  // Clear Firestore
   if(currentUser){
     try{
-      await userPath().collection('meta').doc('leads').delete();
-      await userPath().collection('meta').doc('history').delete();
-      await settingsDoc().delete();
+      await Promise.all([
+        userPath().collection('meta').doc('leads').delete(),
+        userPath().collection('meta').doc('history').delete(),
+        settingsDoc().delete()
+      ]);
     }catch(e){console.error('Clear Firestore error:',e);}
   }
-  refreshAll();renderHistory();
+  // Don't re-seed — let user start fresh. Just reset UI cleanly.
+  refreshAll();
+  renderHistory();
+  renderLeads();
   showToast('All data cleared');
 }
 
