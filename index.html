@@ -889,50 +889,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 function proceedAfterPin() {
-  if (currentUser) {
-    bootstrapUser(currentUser);
-  } else {
-    signInAnonymouslySilent();
-  }
-}
-
-async function bootstrapUser(user) {
-  setSyncStatus('syncing', 'Syncing...');
-  try {
-    const [leadsSnap, histSnap, settSnap] = await Promise.all([
-      userPath().collection('meta').doc('leads').get(),
-      userPath().collection('meta').doc('history').get(),
-      settingsDoc().get()
-    ]);
-    // Load from Firestore, fall back to localStorage if Firestore is empty
-    _leadsCache = leadsSnap.exists
-      ? (leadsSnap.data().data || [])
-      : safeParse(KEYS.leads, []);
-    _historyCache = histSnap.exists
-      ? (histSnap.data().data || [])
-      : safeParse(KEYS.history, []);
-    _settingsCache = settSnap.exists
-      ? (settSnap.data() || {})
-      : safeParse(KEYS.settings, {});
-    // If localStorage had data but Firestore didn't, push it up now
-    if (!leadsSnap.exists && _leadsCache.length > 0) {
-      saveLeads(_leadsCache);
-    }
-    await loadWeeklyActivity();
-    if (_leadsCache.length === 0) seedData();
-    initUI();
-    startRealtimeSync();
-    setSyncStatus('synced', 'Live');
-  } catch(e) {
-    console.error('Bootstrap error:', e);
-    setSyncStatus('error', 'Sync error');
-    // Fall back entirely to localStorage
-    _leadsCache = safeParse(KEYS.leads, []);
-    _historyCache = safeParse(KEYS.history, []);
-    _settingsCache = safeParse(KEYS.settings, {});
-    if (_leadsCache.length === 0) seedData();
-    initUI();
-  }
+  bootstrapApp();
 }
 
 function checkPinOnStart() {
@@ -956,30 +913,25 @@ const FB_CONFIG = {
   appId: "1:779282938514:web:6dd1ec0d1021da3fe6044b"
 };
 firebase.initializeApp(FB_CONFIG);
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
+
+// ── SHARED UID — all devices read/write the same Firestore path ──
+// No anonymous auth. No per-device accounts. One identity, one dataset.
+const SHARED_UID = '7t7OYxjLMcbtmpbP4NX3qzY75N23';
 
 // Enable offline persistence so data survives refresh and brief network loss
 db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
-  if (err.code === 'failed-precondition') {
-    // Multiple tabs open — persistence only works in one tab at a time
-    console.warn('Firestore persistence: multiple tabs open');
-  } else if (err.code === 'unimplemented') {
-    // Browser doesn't support persistence
-    console.warn('Firestore persistence not supported in this browser');
-  }
+  console.warn('Firestore persistence:', err.code);
 });
 
 // ════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════
-let currentUser = null;
-let unsubLeads = null;
-let unsubSettings = null;
 let _leadsCache = [];
 let _historyCache = [];
 let _settingsCache = {};
-let _syncListeners = []; // registered Firestore unsubscribers
+let _activityCache = {};
+let _syncListeners = [];
 
 // ════════════════════════════════════════
 //  SYNC STATUS UI
@@ -987,24 +939,25 @@ let _syncListeners = []; // registered Firestore unsubscribers
 function setSyncStatus(state, label) {
   const dot = document.getElementById('sync-dot');
   const lbl = document.getElementById('sync-label');
-  if(dot) { dot.className = 'sync-dot ' + state; }
-  if(lbl) lbl.textContent = label;
+  if (dot) dot.className = 'sync-dot ' + state;
+  if (lbl) lbl.textContent = label;
 }
 
 // ════════════════════════════════════════
-//  USER PATHS  (per-user Firestore collections)
+//  FIRESTORE PATHS  (all point to shared UID)
 // ════════════════════════════════════════
 function userPath() {
-  if (!currentUser) return null;
-  return db.collection('users').doc(currentUser.uid);
+  return db.collection('users').doc(SHARED_UID);
 }
-function leadsCol() { return userPath().collection('leads'); }
-function historyCol() { return userPath().collection('history'); }
-function settingsDoc() { return userPath().collection('meta').doc('settings'); }
-function activityDoc(dateKey) { return userPath().collection('activity').doc(dateKey); }
+function settingsDoc() {
+  return userPath().collection('meta').doc('settings');
+}
+function activityDoc(dateKey) {
+  return userPath().collection('activity').doc(dateKey);
+}
 
 // ════════════════════════════════════════
-//  SAFE LOCAL PARSE (for activity log only)
+//  SAFE LOCAL PARSE
 // ════════════════════════════════════════
 const KEYS = { leads:'re_leads_v2', history:'re_history_v2', settings:'re_settings_v2' };
 const STORAGE_VERSION = 2;
@@ -1017,38 +970,37 @@ function safeParse(key, fallback) {
     const parsed = JSON.parse(raw);
     return (parsed !== null && parsed !== undefined) ? parsed : fallback;
   } catch(e) {
-    console.warn('Revenue Engine: corrupt storage key:', key, e);
+    console.warn('corrupt storage key:', key, e);
     try { localStorage.removeItem(key); } catch(e2) {}
     return fallback;
   }
 }
 
 // ════════════════════════════════════════
-//  LEADS  (Firestore-backed)
+//  LEADS
 // ════════════════════════════════════════
 function loadLeads() {
-  return _leadsCache.slice(); // return copy of in-memory cache
+  return _leadsCache.slice();
 }
 
 async function saveLeads(leadsArray) {
   _leadsCache = leadsArray;
-  // Always write localStorage as instant local backup
   try { localStorage.setItem(KEYS.leads, JSON.stringify(leadsArray)); } catch(e) {}
-  if (!currentUser) return;
-  setSyncStatus('syncing','Saving...');
+  setSyncStatus('syncing', 'Saving...');
   try {
-    await userPath().collection('meta').doc('leads').set(
-      { data: leadsArray, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }
-    );
-    setSyncStatus('synced','Synced');
+    await userPath().collection('meta').doc('leads').set({
+      data: leadsArray,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setSyncStatus('synced', 'Live');
   } catch(e) {
     console.error('saveLeads error:', e);
-    setSyncStatus('error','Sync error');
+    setSyncStatus('error', 'Sync error');
   }
 }
 
 // ════════════════════════════════════════
-//  HISTORY  (Firestore-backed)
+//  HISTORY
 // ════════════════════════════════════════
 function loadHistory() {
   return _historyCache.slice();
@@ -1057,11 +1009,11 @@ function loadHistory() {
 async function saveHistory(historyArray) {
   _historyCache = historyArray.slice(0, 200);
   try { localStorage.setItem(KEYS.history, JSON.stringify(_historyCache)); } catch(e) {}
-  if (!currentUser) return;
   try {
-    await userPath().collection('meta').doc('history').set(
-      { data: _historyCache, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }
-    );
+    await userPath().collection('meta').doc('history').set({
+      data: _historyCache,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   } catch(e) {
     console.error('saveHistory error:', e);
   }
@@ -1074,10 +1026,12 @@ function addHistory(type, company, details) {
 }
 
 // ════════════════════════════════════════
-//  SETTINGS  (Firestore-backed)
+//  SETTINGS
 // ════════════════════════════════════════
-const DEFAULT_SETTINGS = { monthlyGoal:5000, leadsGoal:15, dealsGoal:5, convGoal:30,
-  weeklyContacts:10, weeklyConvos:3, weeklyPitches:1, weeklyFollowups:5 };
+const DEFAULT_SETTINGS = {
+  monthlyGoal:5000, leadsGoal:15, dealsGoal:5, convGoal:30,
+  weeklyContacts:10, weeklyConvos:3, weeklyPitches:1, weeklyFollowups:5
+};
 
 function loadSettings() {
   return { ...DEFAULT_SETTINGS, ..._settingsCache };
@@ -1086,7 +1040,6 @@ function loadSettings() {
 async function saveSettings(s) {
   _settingsCache = { ...s };
   try { localStorage.setItem(KEYS.settings, JSON.stringify(s)); } catch(e) {}
-  if (!currentUser) return;
   try {
     await settingsDoc().set(s, { merge: true });
   } catch(e) {
@@ -1095,72 +1048,51 @@ async function saveSettings(s) {
 }
 
 // ════════════════════════════════════════
-//  ACTIVITY LOG  (Firestore-backed, keyed by date)
+//  ACTIVITY LOG
 // ════════════════════════════════════════
-let _activityCache = {}; // { 'act_2025-01-01': { contacts: 3, ... } }
-
 function todayKey() { return 'act_' + new Date().toISOString().split('T')[0]; }
 
 function loadActivityLog() {
-  const k = todayKey();
-  return _activityCache[k] || {};
+  return _activityCache[todayKey()] || {};
 }
 
 async function saveActivityLog(data) {
   const k = todayKey();
   _activityCache[k] = data;
-  if (!currentUser) {
-    try { localStorage.setItem(k, JSON.stringify(data)); } catch(e) {}
-    return;
-  }
+  try { localStorage.setItem(k, JSON.stringify(data)); } catch(e) {}
   try {
-    await activityDoc(k).set({ data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await activityDoc(k).set({
+      data,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
   } catch(e) {
     console.error('saveActivityLog error:', e);
-    try { localStorage.setItem(k, JSON.stringify(data)); } catch(e2) {}
   }
 }
 
-// Load this week's activity from Firestore into cache
 async function loadWeeklyActivity() {
-  if (!currentUser) {
-    // fallback: read from localStorage
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const key = 'act_' + d.toISOString().split('T')[0];
-      _activityCache[key] = safeParse(key, {});
-    }
-    return;
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const keys = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    keys.push('act_' + d.toISOString().split('T')[0]);
   }
   try {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
-    const keys = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      keys.push('act_' + d.toISOString().split('T')[0]);
-    }
-    const fetches = keys.map(k => activityDoc(k).get());
-    const docs = await Promise.all(fetches);
+    const docs = await Promise.all(keys.map(k => activityDoc(k).get()));
     docs.forEach((snap, i) => {
       _activityCache[keys[i]] = snap.exists ? (snap.data().data || {}) : {};
     });
   } catch(e) {
-    console.error('loadWeeklyActivity error:', e);
+    // fallback to localStorage
+    keys.forEach(k => { _activityCache[k] = safeParse(k, {}); });
   }
 }
 
 function getActivityCount(id) {
-  const log = loadActivityLog();
-  return Math.max(0, parseInt(log[id] || 0));
+  return Math.max(0, parseInt(loadActivityLog()[id] || 0));
 }
 function setActivityCount(id, val) {
   const log = loadActivityLog();
@@ -1169,51 +1101,46 @@ function setActivityCount(id, val) {
 }
 
 // ════════════════════════════════════════
-//  MISC HELPERS
+//  MISC
 // ════════════════════════════════════════
-function genId() { return 'lead_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6); }
+function genId() {
+  return 'lead_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+}
 
 // ════════════════════════════════════════
 //  REAL-TIME LISTENERS
 // ════════════════════════════════════════
 function startRealtimeSync() {
-  // Unsubscribe any previous listeners
   _syncListeners.forEach(fn => fn());
   _syncListeners = [];
 
-  setSyncStatus('syncing', 'Syncing...');
+  let firstLeads = true;
+  let firstSettings = true;
 
-  let _firstLeadsSnap = true;
-  let _firstSettSnap = true;
-
-  // Listen to leads doc — skip first snapshot (already loaded in bootstrap)
   const unsubL = userPath().collection('meta').doc('leads').onSnapshot(snap => {
-    const newData = snap.exists ? (snap.data().data || []) : [];
-    if (_firstLeadsSnap) { _firstLeadsSnap = false; return; } // skip echo of bootstrap load
-    _leadsCache = newData;
+    if (firstLeads) { firstLeads = false; return; }
+    _leadsCache = snap.exists ? (snap.data().data || []) : [];
     try { localStorage.setItem(KEYS.leads, JSON.stringify(_leadsCache)); } catch(e) {}
     refreshAll();
-    const activeTab = document.querySelector('.tab-pane.active');
-    if (activeTab && activeTab.id === 'tab-leads') renderLeads();
+    const active = document.querySelector('.tab-pane.active');
+    if (active && active.id === 'tab-leads') renderLeads();
     setSyncStatus('synced', 'Live');
   }, err => {
-    console.error('leads listener error:', err);
+    console.error('leads listener:', err);
     setSyncStatus('error', 'Sync error');
   });
   _syncListeners.push(unsubL);
 
-  // Listen to history doc
   const unsubH = userPath().collection('meta').doc('history').onSnapshot(snap => {
     _historyCache = snap.exists ? (snap.data().data || []) : [];
     try { localStorage.setItem(KEYS.history, JSON.stringify(_historyCache)); } catch(e) {}
-    const activeTab = document.querySelector('.tab-pane.active');
-    if (activeTab && activeTab.id === 'tab-history') renderHistory();
+    const active = document.querySelector('.tab-pane.active');
+    if (active && active.id === 'tab-history') renderHistory();
   }, err => { console.error('history listener:', err); });
   _syncListeners.push(unsubH);
 
-  // Listen to settings doc — skip first snapshot
   const unsubS = settingsDoc().onSnapshot(snap => {
-    if (_firstSettSnap) { _firstSettSnap = false; return; }
+    if (firstSettings) { firstSettings = false; return; }
     if (snap.exists) {
       _settingsCache = snap.data() || {};
       try { localStorage.setItem(KEYS.settings, JSON.stringify(_settingsCache)); } catch(e) {}
@@ -1221,6 +1148,8 @@ function startRealtimeSync() {
     refreshAll();
   }, err => { console.error('settings listener:', err); });
   _syncListeners.push(unsubS);
+
+  setSyncStatus('synced', 'Live');
 }
 
 function stopRealtimeSync() {
@@ -1229,40 +1158,53 @@ function stopRealtimeSync() {
 }
 
 // ════════════════════════════════════════
-//  AUTH — ANONYMOUS ONLY (silent, automatic)
+//  BOOTSTRAP — no auth needed, just load data
 // ════════════════════════════════════════
-// No login UI. Firebase anonymous auth silently provisions a persistent
-// account tied to this browser. PIN is the only gate.
-async function signInAnonymouslySilent() {
+async function bootstrapApp() {
+  setSyncStatus('syncing', 'Syncing...');
   try {
-    await auth.signInAnonymously();
-    // onAuthStateChanged fires and bootstraps everything
+    const [leadsSnap, histSnap, settSnap] = await Promise.all([
+      userPath().collection('meta').doc('leads').get(),
+      userPath().collection('meta').doc('history').get(),
+      settingsDoc().get()
+    ]);
+    _leadsCache = leadsSnap.exists
+      ? (leadsSnap.data().data || [])
+      : safeParse(KEYS.leads, []);
+    _historyCache = histSnap.exists
+      ? (histSnap.data().data || [])
+      : safeParse(KEYS.history, []);
+    _settingsCache = settSnap.exists
+      ? (settSnap.data() || {})
+      : safeParse(KEYS.settings, {});
+
+    // If localStorage had data but Firestore was empty, push it up
+    if (!leadsSnap.exists && _leadsCache.length > 0) saveLeads(_leadsCache);
+    if (!histSnap.exists && _historyCache.length > 0) saveHistory(_historyCache);
+    if (!settSnap.exists && Object.keys(_settingsCache).length > 0) saveSettings(_settingsCache);
+
+    await loadWeeklyActivity();
+    if (_leadsCache.length === 0) seedData();
+    initUI();
+    startRealtimeSync();
   } catch(e) {
-    console.error('Anonymous sign-in error:', e);
-    setSyncStatus('error', 'Auth error');
-    // Fallback: load from localStorage so app still works
+    console.error('Bootstrap error:', e);
+    setSyncStatus('error', 'Sync error');
+    // Full localStorage fallback
     _leadsCache = safeParse(KEYS.leads, []);
     _historyCache = safeParse(KEYS.history, []);
     _settingsCache = safeParse(KEYS.settings, {});
     if (_leadsCache.length === 0) seedData();
-    setSyncStatus('offline', 'Offline');
     initUI();
   }
 }
 
 // ════════════════════════════════════════
-//  BOOTSTRAP
+//  CALLED AFTER PIN IS ENTERED
 // ════════════════════════════════════════
-auth.onAuthStateChanged(async function(user) {
-  // Always capture user — even if PIN locked, we need the UID stored
-  currentUser = user;
-  if (_pinLocked) return; // PIN not yet entered — UI bootstrap will happen in proceedAfterPin
-  if (user) {
-    await bootstrapUser(user);
-  } else {
-    signInAnonymouslySilent();
-  }
-});
+function proceedAfterPin() {
+  bootstrapApp();
+}
 
 function initUI() {
   refreshAll();
@@ -1270,6 +1212,7 @@ function initUI() {
   renderLeads();
   attachGoalEdit(document.getElementById('closed-revenue-display'));
 }
+
 
 
 function fmt$(v){if(v===undefined||v===null||isNaN(v))return'$0';const n=parseFloat(v);if(n>=1000000)return'$'+(n/1000000).toFixed(1)+'M';if(n>=1000)return'$'+(n/1000).toFixed(1)+'k';return'$'+Math.round(n).toLocaleString();}
@@ -1832,22 +1775,15 @@ async function clearAllData(){
   if(!confirm('Delete ALL leads, history, and settings? This cannot be undone.')) return;
   if(!confirm('Final confirmation: delete everything?')) return;
   _leadsCache=[];_historyCache=[];_settingsCache={};
-  // Clear localStorage
   Object.values(KEYS).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
-  // Clear Firestore
-  if(currentUser){
-    try{
-      await Promise.all([
-        userPath().collection('meta').doc('leads').delete(),
-        userPath().collection('meta').doc('history').delete(),
-        settingsDoc().delete()
-      ]);
-    }catch(e){console.error('Clear Firestore error:',e);}
-  }
-  // Don't re-seed — let user start fresh. Just reset UI cleanly.
-  refreshAll();
-  renderHistory();
-  renderLeads();
+  try{
+    await Promise.all([
+      userPath().collection('meta').doc('leads').delete(),
+      userPath().collection('meta').doc('history').delete(),
+      settingsDoc().delete()
+    ]);
+  }catch(e){console.error('Clear Firestore error:',e);}
+  refreshAll();renderHistory();renderLeads();
   showToast('All data cleared');
 }
 
